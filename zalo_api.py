@@ -140,6 +140,28 @@ def send_voice(target_id: str, audio_url: str, is_group: bool = True, profile: s
     return "error" not in result
 
 
+def send_file(target_id: str, file_url: str, caption: str = "", is_group: bool = True, profile: str = None) -> bool:
+    """Send a file to a user or group."""
+    args = ["msg", "file", str(target_id), "-u", file_url]
+    if caption:
+        args.extend(["-m", caption])
+    if is_group:
+        args.append("-g")
+
+    result = _run_openzca(args, profile=profile)
+    return "error" not in result
+
+
+def send_link(target_id: str, url: str, is_group: bool = True, profile: str = None) -> bool:
+    """Send a link preview to a user or group."""
+    args = ["msg", "link", str(target_id), url]
+    if is_group:
+        args.append("-g")
+
+    result = _run_openzca(args, profile=profile)
+    return "error" not in result
+
+
 # ─── Account / Profile ────────────────────────────────────────────────────────
 
 def get_own_id(profile: str = None) -> Optional[str]:

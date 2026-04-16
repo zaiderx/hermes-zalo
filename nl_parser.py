@@ -78,6 +78,47 @@ def parse_command(text: str, sender_id: str = None, sender_name: str = None) -> 
             message = match.group(2).strip()
             # Remove trailing particles
             account_name = re.sub(r"\s*(nhé|nha|đi|ạ|ơi)\s*$", "", account_name)
+
+            # Detect media type in message
+            # "ảnh <url_or_path>"
+            img_match = re.match(r"ảnh\s+(https?://\S+|/.+?\.(?:jpg|png|gif|webp))\s*(.*)", message, re.IGNORECASE)
+            if img_match:
+                return {
+                    "action": "send_image",
+                    "account_name": account_name,
+                    "media_url": img_match.group(1),
+                    "caption": img_match.group(2).strip(),
+                }
+
+            # "file <url_or_path>"
+            file_match = re.match(r"file\s+(https?://\S+|/.+?\.\w+)\s*(.*)", message, re.IGNORECASE)
+            if file_match:
+                return {
+                    "action": "send_file",
+                    "account_name": account_name,
+                    "media_url": file_match.group(1),
+                    "caption": file_match.group(2).strip(),
+                }
+
+            # "voice <url_or_path>" or "ghi âm <url>"
+            voice_match = re.match(r"(?:voice|ghi\s*âm|audio)\s+(https?://\S+|/.+?\.(?:ogg|mp3|wav|m4a))\s*(.*)", message, re.IGNORECASE)
+            if voice_match:
+                return {
+                    "action": "send_voice",
+                    "account_name": account_name,
+                    "media_url": voice_match.group(1),
+                }
+
+            # "lịch <schedule> <message>" - cron scheduling
+            cron_match = re.match(r"lịch\s+((?:mỗi\s+)?(?:\d+\s*(?:giờ|phút|ngày|tuần)|hàng\s+(?:ngày|tuần|tháng)|\d{1,2}:\d{2}).*?)\s+(.+)", message, re.IGNORECASE)
+            if cron_match:
+                return {
+                    "action": "schedule",
+                    "account_name": account_name,
+                    "schedule": cron_match.group(1).strip(),
+                    "message": cron_match.group(2).strip(),
+                }
+
             return {
                 "action": "send",
                 "account_name": account_name,
@@ -297,6 +338,106 @@ def execute_command(cmd: Dict[str, Any]) -> str:
             else:
                 lines.append(f"  🔴 {name}: Mất kết nối")
         return "\n".join(lines)
+
+    # ─── Send image ───────────────────────────────────────────────────
+    if action == "send_image":
+        account, profile, err = _resolve_account(cmd)
+        if err:
+            return err
+
+        media_url = cmd.get("media_url", "")
+        caption = cmd.get("caption", "")
+
+        groups = zalo_api.list_groups(profile=profile)
+        if not groups:
+            return f"❌ Acc '{account['name']}' không có nhóm nào"
+
+        target = groups[0]
+        target_id = target["groupId"]
+        target_name = target.get("name", target_id)
+
+        success = zalo_api.send_image(target_id, media_url, caption=caption, is_group=True, profile=profile)
+        if success:
+            return f"✅ Đã gửi ảnh qua '{account['name']}' → {target_name}"
+        else:
+            return f"❌ Gửi ảnh thất bại"
+
+    # ─── Send file ────────────────────────────────────────────────────
+    if action == "send_file":
+        account, profile, err = _resolve_account(cmd)
+        if err:
+            return err
+
+        media_url = cmd.get("media_url", "")
+
+        groups = zalo_api.list_groups(profile=profile)
+        if not groups:
+            return f"❌ Acc '{account['name']}' không có nhóm nào"
+
+        target = groups[0]
+        target_id = target["groupId"]
+        target_name = target.get("name", target_id)
+
+        # Send file as attachment via msg send with link
+        success = zalo_api.send_message(target_id, f"📎 {media_url}", is_group=True, profile=profile)
+        if success:
+            return f"✅ Đã gửi file qua '{account['name']}' → {target_name}"
+        else:
+            return f"❌ Gửi file thất bại"
+
+    # ─── Send voice ───────────────────────────────────────────────────
+    if action == "send_voice":
+        account, profile, err = _resolve_account(cmd)
+        if err:
+            return err
+
+        media_url = cmd.get("media_url", "")
+
+        groups = zalo_api.list_groups(profile=profile)
+        if not groups:
+            return f"❌ Acc '{account['name']}' không có nhóm nào"
+
+        target = groups[0]
+        target_id = target["groupId"]
+        target_name = target.get("name", target_id)
+
+        success = zalo_api.send_voice(target_id, media_url, is_group=True, profile=profile)
+        if success:
+            return f"✅ Đã gửi voice qua '{account['name']}' → {target_name}"
+        else:
+            return f"❌ Gửi voice thất bại"
+
+    # ─── Schedule (cron) ──────────────────────────────────────────────
+    if action == "schedule":
+        account, profile, err = _resolve_account(cmd)
+        if err:
+            return err
+
+        schedule_text = cmd.get("schedule", "")
+        message = cmd.get("message", "")
+
+        import scheduler
+        schedule_config = scheduler.parse_schedule(schedule_text)
+        if not schedule_config:
+            return f"❌ Không hiểu lịch: '{schedule_text}'. Ví dụ: 'mỗi 1 giờ', 'hàng ngày 9h', 'mỗi 30 phút'"
+
+        job = scheduler.create_job(
+            account_name=account["name"],
+            message=message,
+            schedule_config=schedule_config,
+        )
+
+        if "error" in job:
+            return f"❌ {job['error']}"
+
+        desc = scheduler._describe_schedule(schedule_config)
+        return (
+            f"✅ Đã tạo lịch gửi!\n"
+            f"Acc: {account['name']}\n"
+            f"Lịch: {desc}\n"
+            f"Nội dung: {message[:100]}...\n"
+            f"Job ID: {job['id']}"
+        )
 
     return "❓ Không hiểu lệnh"
 
