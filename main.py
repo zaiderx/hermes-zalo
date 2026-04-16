@@ -11,6 +11,7 @@ import db_local
 import db_mariadb
 import listener
 import sync
+import api_server
 
 # ─── Logging setup ────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -24,8 +25,10 @@ logger = logging.getLogger("hermes-zalo")
 # ─── Shutdown handler ─────────────────────────────────────────────────────────
 def _shutdown(signum=None, frame=None):
     logger.info("Đang dừng Hermes-Zalo...")
+    api_server.stop()
     sync.stop()
     listener.stop()
+    scheduler.stop()
     logger.info("Hermes-Zalo đã dừng. Tạm biệt!")
     sys.exit(0)
 
@@ -53,6 +56,13 @@ def main():
 
     # Start auto-sync
     sync.start()
+
+    # Start scheduler
+    import scheduler as sched_module
+    sched_module.start_all()
+
+    # Start API server
+    api_server.start()
 
     # Start all listeners (multi-account)
     logger.info(f"[INIT] Khởi động {len(profiles)} Zalo listeners...")
