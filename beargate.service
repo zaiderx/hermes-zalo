@@ -1,0 +1,17 @@
+[Unit]
+Description=BearGate - Zalo <-> Hermes Gateway
+After=network.target mariadb.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/beargate
+EnvironmentFile=/opt/beargate/.env
+ExecStart=/opt/beargate/venv/bin/python main.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
