@@ -29,7 +29,7 @@ def _get_pool():
             password=config.MARIADB_PASSWORD,
             database=config.MARIADB_DATABASE,
             autocommit=False,
-            pool_name="hermes-zalo_pool",
+            pool_name="hermes_zalo_pool",
             pool_size=5,
         )
         logger.info(f"[MARIADB] Kết nối thành công tới {config.MARIADB_DATABASE}")

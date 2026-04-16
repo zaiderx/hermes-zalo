@@ -1,11 +1,11 @@
 #!/bin/bash
-# BearGate setup script - deploy to /opt/hermes-zalo
+# Hermes-Zalo setup script - deploy to /opt/hermes-zalo
 set -e
 
 INSTALL_DIR="/opt/hermes-zalo"
 SERVICE_NAME="hermes-zalo"
 
-echo "🐾 BearGate Setup - Zalo <-> Hermes Gateway"
+echo "🐾 Hermes-Zalo Setup - Zalo <-> Hermes Gateway"
 echo "============================================"
 
 # Check dependencies

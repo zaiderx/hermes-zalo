@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""BearGate - Zalo <-> Hermes Gateway with MariaDB storage (multi-account)."""
+"""Hermes-Zalo - Zalo <-> Hermes Gateway with MariaDB storage (multi-account)."""
 
 import logging
 import signal
@@ -23,10 +23,10 @@ logger = logging.getLogger("hermes-zalo")
 
 # ─── Shutdown handler ─────────────────────────────────────────────────────────
 def _shutdown(signum=None, frame=None):
-    logger.info("Đang dừng BearGate...")
+    logger.info("Đang dừng Hermes-Zalo...")
     sync.stop()
     listener.stop()
-    logger.info("BearGate đã dừng. Tạm biệt!")
+    logger.info("Hermes-Zalo đã dừng. Tạm biệt!")
     sys.exit(0)
 
 
@@ -36,7 +36,7 @@ def main():
     signal.signal(signal.SIGTERM, _shutdown)
 
     profiles = config.OPENZCA_PROFILES
-    logger.info(f"=== BearGate khởi động ({len(profiles)} Zalo accounts) ===")
+    logger.info(f"=== Hermes-Zalo khởi động ({len(profiles)} Zalo accounts) ===")
     for p in profiles:
         label = config.get_profile_config(p).get("label", "")
         logger.info(f"  📱 Profile: {p}" + (f" ({label})" if label else ""))

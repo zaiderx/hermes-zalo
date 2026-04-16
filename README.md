@@ -1,14 +1,14 @@
-# 🐻 BearGate
+# 🐻 Hermes-Zalo
 
 **Zalo <-> Hermes Gateway** with MariaDB storage
 
-BearGate bridge Zalo messages to Hermes AI agent, with MariaDB for persistent storage.
+Hermes-Zalo bridge Zalo messages to Hermes AI agent, with MariaDB for persistent storage.
 
 ## Architecture
 
 ```
 Zalo User → openzca listen (WebSocket)
-    → BearGate listener
+    → Hermes-Zalo listener
         → SQLite (local cache)
         → MariaDB (persistent storage)
         → Hermes Bridge → AI Agent
@@ -75,7 +75,7 @@ hermes-zalo/
 ## Flow
 
 1. `openzca listen --raw --keep-alive` streams JSON messages
-2. BearGate parses each line, filters own messages
+2. Hermes-Zalo parses each line, filters own messages
 3. Saves to SQLite (fast) + MariaDB (persistent)
 4. DMs forwarded to Hermes agent
 5. Response sent back via `openzca msg send`

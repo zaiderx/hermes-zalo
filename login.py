@@ -213,7 +213,7 @@ def _save_base64_png(b64_data: str, profile: str) -> str:
 
     img_bytes = base64.b64decode(b64_data)
 
-    save_dir = os.path.expanduser("~/.beargate/qrcodes")
+    save_dir = os.path.expanduser("~/.hermes-zalo/qrcodes")
     os.makedirs(save_dir, exist_ok=True)
 
     filepath = os.path.join(save_dir, f"qr_{profile}_{int(time.time())}.png")

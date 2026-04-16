@@ -42,7 +42,7 @@ def process_command(sender_id: str, text: str, sender_name: str = None, profile:
     # ─── /help ────────────────────────────────────────────────────────
     if cmd in ("/help", "/giúp", "!help"):
         return (
-            "🐾 BearGate Commands:\n"
+            "🐾 Hermes-Zalo Commands:\n"
             "/login [acc] - Đăng nhập Zalo (QR code)\n"
             "/logout [acc] - Đăng xuất Zalo\n"
             "/status - Trạng thái các acc\n"

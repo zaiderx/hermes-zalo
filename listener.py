@@ -235,7 +235,7 @@ def _listen_loop(profile: str):
     logger.info(f"[{profile}] Khởi động listener: {' '.join(cmd)}")
 
     while not _stop_event.is_set():
-        logger.info(f"=== [{profile}] BearGate listener khởi động ===")
+        logger.info(f"=== [{profile}] Hermes-Zalo listener khởi động ===")
 
         try:
             proc = subprocess.Popen(

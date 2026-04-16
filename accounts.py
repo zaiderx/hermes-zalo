@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger("hermes-zalo.accounts")
 
-ACCOUNTS_FILE = os.path.expanduser("~/.beargate/accounts.json")
+ACCOUNTS_FILE = os.path.expanduser("~/.hermes-zalo/accounts.json")
 
 
 def _load() -> Dict[str, Any]:

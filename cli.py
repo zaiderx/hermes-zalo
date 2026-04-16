@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""BearGate CLI - manage Zalo accounts from terminal."""
+"""Hermes-Zalo CLI - manage Zalo accounts from terminal."""
 
 import sys
 import os
@@ -21,7 +21,7 @@ def cmd_login(args):
     """
     profile = args[0] if args else (config.OPENZCA_PROFILES[0] if config.OPENZCA_PROFILES else "default")
 
-    print(f"🐾 BearGate Login - Profile: {profile}")
+    print(f"🐾 Hermes-Zalo Login - Profile: {profile}")
     print("=" * 40)
 
     # Check if already logged in
@@ -112,7 +112,7 @@ def _try_display_qr_terminal(qr_path: str) -> bool:
 
 def cmd_status(args):
     """Show status of all Zalo accounts."""
-    print("📊 BearGate Account Status")
+    print("📊 Hermes-Zalo Account Status")
     print("=" * 40)
 
     profiles = config.OPENZCA_PROFILES
@@ -164,7 +164,7 @@ def cmd_profiles(args):
 
 def main():
     if len(sys.argv) < 2:
-        print("🐾 BearGate CLI")
+        print("🐾 Hermes-Zalo CLI")
         print("Usage: python cli.py <command> [args]")
         print()
         print("Commands:")
