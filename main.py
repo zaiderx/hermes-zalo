@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""BearGate - Zalo <-> Hermes Gateway with MariaDB storage."""
+"""BearGate - Zalo <-> Hermes Gateway with MariaDB storage (multi-account)."""
 
 import logging
 import signal
@@ -20,26 +20,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger("hermes-zalo")
 
-# ─── Own ID detection ─────────────────────────────────────────────────────────
-def _detect_own_id():
-    """Detect own Zalo ID if not configured."""
-    if config.OWN_ID:
-        return
-
-    import subprocess
-    try:
-        result = subprocess.run(
-            [config.OPENZCA_BIN, "--profile", config.OPENZCA_PROFILE, "me", "id"],
-            capture_output=True, text=True, timeout=10,
-        )
-        if result.returncode == 0:
-            own_id = result.stdout.strip()
-            if own_id:
-                config.OWN_ID = own_id
-                logger.info(f"Own ID: {own_id} (sẽ lọc tin nhắn từ chính mình)")
-    except Exception as e:
-        logger.warning(f"Không thể detect own ID: {e}")
-
 
 # ─── Shutdown handler ─────────────────────────────────────────────────────────
 def _shutdown(signum=None, frame=None):
@@ -55,7 +35,11 @@ def main():
     signal.signal(signal.SIGINT, _shutdown)
     signal.signal(signal.SIGTERM, _shutdown)
 
-    logger.info("=== BearGate khởi động ===")
+    profiles = config.OPENZCA_PROFILES
+    logger.info(f"=== BearGate khởi động ({len(profiles)} Zalo accounts) ===")
+    for p in profiles:
+        label = config.get_profile_config(p).get("label", "")
+        logger.info(f"  📱 Profile: {p}" + (f" ({label})" if label else ""))
 
     # Init databases
     logger.info("[INIT] Khởi tạo SQLite...")
@@ -70,15 +54,12 @@ def main():
         logger.error(f"[INIT] MariaDB connection failed: {e}")
         logger.error("[INIT] Tiếp tục với SQLite - sync sẽ retry sau")
 
-    # Detect own ID
-    _detect_own_id()
-
     # Start auto-sync
     sync.start()
 
-    # Start listener (blocking)
-    logger.info("[INIT] Khởi động Zalo listener...")
-    listener.start()
+    # Start all listeners (multi-account)
+    logger.info(f"[INIT] Khởi động {len(profiles)} Zalo listeners...")
+    listener.start_all()
 
     # Keep main thread alive
     try:
