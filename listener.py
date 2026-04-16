@@ -136,11 +136,12 @@ def _process_message(line: str, profile: str):
     except Exception as e:
         logger.error(f"[DB][{profile}] SQLite insert error: {e}")
 
-    # Save to MariaDB (real-time)
-    try:
-        db_mariadb.insert_single(data)
-    except Exception as e:
-        logger.error(f"[DB][{profile}] MariaDB insert error (will retry on sync): {e}")
+    # Save to MariaDB (real-time) - only if available
+    if sync.is_available():
+        try:
+            db_mariadb.insert_single(data)
+        except Exception as e:
+            logger.error(f"[DB][{profile}] MariaDB insert error (will retry on sync): {e}")
     # Only process DMs (skip groups unless configured)
     if chat_type != "user":
         logger.debug(f"[SKIP][{profile}] Group message - not forwarding")

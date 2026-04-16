@@ -12,15 +12,48 @@ logger = logging.getLogger("hermes-zalo.sync")
 
 _sync_thread: threading.Thread | None = None
 _stop_event = threading.Event()
+_mariadb_available = False
+
+
+def check_mariadb() -> bool:
+    """Check if MariaDB is configured and reachable. Returns True if available."""
+    global _mariadb_available
+
+    # Skip if no config
+    if not config.MARIADB_HOST or not config.MARIADB_USER or not config.MARIADB_PASSWORD:
+        logger.info("[SYNC] MariaDB chưa cấu hình - bỏ qua sync")
+        _mariadb_available = False
+        return False
+
+    try:
+        db_mariadb.init_tables()
+        stats = db_mariadb.get_stats()
+        logger.info(f"[SYNC] MariaDB sẵn sàng - {stats['total']} records")
+        _mariadb_available = True
+        return True
+    except Exception as e:
+        logger.warning(f"[SYNC] MariaDB không khả dụng: {e}")
+        _mariadb_available = False
+        return False
+
+
+def is_available() -> bool:
+    """Check if MariaDB sync is available."""
+    return _mariadb_available
 
 
 def do_sync() -> dict:
     """Run one sync cycle. Returns stats dict."""
-    logger.info("[AUTO-SYNC] Bắt đầu đồng bộ dữ liệu...")
+    global _mariadb_available
+
+    if not _mariadb_available:
+        return {"total": 0, "inserted": 0, "errors": 0, "skipped": True}
+
+    logger.info("[SYNC] Bắt đầu đồng bộ dữ liệu...")
 
     unsynced = db_local.get_unsynced_messages(limit=1000)
     if not unsynced:
-        logger.info("[AUTO-SYNC] Không có dữ liệu mới")
+        logger.info("[SYNC] Không có dữ liệu mới")
         return {"total": 0, "inserted": 0, "errors": 0}
 
     rows = []
@@ -45,9 +78,11 @@ def do_sync() -> dict:
     try:
         inserted = db_mariadb.insert_messages(rows)
     except Exception as e:
-        logger.error(f"[AUTO-SYNC] MariaDB insert error: {e}")
+        logger.error(f"[SYNC] MariaDB insert error: {e}")
         inserted = 0
         errors = len(rows)
+        # MariaDB went down - mark as unavailable
+        _mariadb_available = False
 
     if inserted > 0:
         db_local.mark_synced(ids)
@@ -58,7 +93,7 @@ def do_sync() -> dict:
         "errors": errors,
     }
     logger.info(
-        f"[AUTO-SYNC] Hoàn tất - total={stats['total']} "
+        f"[SYNC] Hoàn tất - total={stats['total']} "
         f"inserted={stats['inserted']} errors={stats['errors']}"
     )
     return stats

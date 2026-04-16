@@ -45,14 +45,11 @@ def main():
     logger.info("[INIT] Khởi tạo SQLite...")
     db_local.get_conn()
 
-    logger.info("[INIT] Kết nối MariaDB...")
-    try:
-        db_mariadb.init_tables()
-        stats = db_mariadb.get_stats()
-        logger.info(f"[INIT] MariaDB ready - {stats['total']} records")
-    except Exception as e:
-        logger.error(f"[INIT] MariaDB connection failed: {e}")
-        logger.error("[INIT] Tiếp tục với SQLite - sync sẽ retry sau")
+    logger.info("[INIT] Kiểm tra MariaDB...")
+    if sync.check_mariadb():
+        logger.info("[INIT] MariaDB sẵn sàng - sync sẽ hoạt động")
+    else:
+        logger.info("[INIT] MariaDB chưa cấu hình - chỉ dùng SQLite")
 
     # Start auto-sync
     sync.start()
