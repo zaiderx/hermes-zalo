@@ -141,30 +141,44 @@ def _process_message(line: str, profile: str):
         db_mariadb.insert_single(data)
     except Exception as e:
         logger.error(f"[DB][{profile}] MariaDB insert error (will retry on sync): {e}")
-
     # Only process DMs (skip groups unless configured)
     if chat_type != "user":
         logger.debug(f"[SKIP][{profile}] Group message - not forwarding")
         return
 
-    # Check for commands first
+    # ─── 1. Check natural language commands first ─────────────────────
+    import nl_parser
+    nl_cmd = nl_parser.parse_command(content, sender_id=sender_id, sender_name=sender_name)
+    if nl_cmd:
+        logger.info(f"[NL-CMD][{profile}] {sender_name}: {nl_cmd['action']}")
+        response = nl_parser.execute_command(nl_cmd)
+
+        # Handle QR login - send image
+        if isinstance(response, dict) and response.get("_type") == "qr_login":
+            qr_path = response.get("qr_path")
+            message = response.get("message", "Quét QR code này")
+            if qr_path and os.path.exists(qr_path):
+                _send_zalo_image(thread_id, qr_path, caption=message, profile=profile)
+            else:
+                _send_zalo_reply(thread_id, message, profile=profile)
+        elif response:
+            _send_zalo_reply(thread_id, response, profile=profile)
+        return
+
+    # ─── 2. Check slash commands ──────────────────────────────────────
     cmd_response = cmd_handler.process_command(
         sender_id=sender_id,
         text=content,
         sender_name=sender_name,
+        profile=profile,
     )
 
     if cmd_response:
-        # Handle QR login - send image to user
+        # Handle QR login - send image
         if isinstance(cmd_response, dict) and cmd_response.get("_type") == "qr_login":
             qr_path = cmd_response.get("qr_path")
             message = cmd_response.get("message", "Quét QR code này")
             if qr_path and os.path.exists(qr_path):
-                # Convert to base64 data URI for sending as image
-                import base64 as b64mod
-                with open(qr_path, "rb") as f:
-                    img_b64 = b64mod.b64encode(f.read()).decode()
-                # Save as temp file accessible by openzca
                 _send_zalo_image(thread_id, qr_path, caption=message, profile=profile)
             else:
                 _send_zalo_reply(thread_id, message, profile=profile)
@@ -173,7 +187,7 @@ def _process_message(line: str, profile: str):
         _send_zalo_reply(thread_id, cmd_response, profile=profile)
         return
 
-    # Forward to Hermes
+    # ─── 3. Forward to Hermes (default) ──────────────────────────────
     logger.info(f"[PROC][{profile}] DM threadId={thread_id} senderId={sender_id}")
     response = hermes_bridge.call_hermes(
         prompt=content,
