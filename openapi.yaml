@@ -1,0 +1,515 @@
+openapi: 3.1.0
+info:
+  title: Hermes-Zalo API
+  description: |
+    HTTP API for Hermes-Zalo Gateway.
+    Send messages, images, voice, files to Zalo groups and manage scheduled jobs.
+    Used by Hermes cron to trigger Zalo messages.
+  version: 1.0.0
+  contact:
+    name: Hermes-Zalo
+    url: https://github.com/zaiderx/hermes-zalo
+
+servers:
+  - url: http://localhost:8199
+    description: Local server
+
+security:
+  - bearerAuth: []
+  - apiKeyQuery: []
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags: [System]
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /status:
+    get:
+      summary: Get login status of all Zalo accounts
+      operationId: getStatus
+      tags: [Accounts]
+      responses:
+        "200":
+          description: Account status list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /accounts:
+    get:
+      summary: List all registered Zalo accounts
+      operationId: listAccounts
+      tags: [Accounts]
+      responses:
+        "200":
+          description: Account list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /accounts/{name}/groups:
+    get:
+      summary: List groups for a specific account
+      operationId: listAccountGroups
+      tags: [Accounts]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Account friendly name (e.g. "Duy Phong")
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Group list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /send:
+    post:
+      summary: Send a text message to a Zalo group
+      operationId: sendMessage
+      tags: [Messaging]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+            examples:
+              basic:
+                summary: Send to first group
+                value:
+                  account: "Duy Phong"
+                  message: "Báo cáo hôm nay: ..."
+              with_group:
+                summary: Send to specific group
+                value:
+                  account: "Duy Phong"
+                  group: "Công ty"
+                  message: "Báo cáo hôm nay: ..."
+      responses:
+        "200":
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /send-image:
+    post:
+      summary: Send an image to a Zalo group
+      operationId: sendImage
+      tags: [Messaging]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendImageRequest"
+            examples:
+              with_caption:
+                summary: Image with caption
+                value:
+                  account: "Duy Phong"
+                  url: "https://example.com/chart.png"
+                  caption: "Biểu đồ doanh số"
+      responses:
+        "200":
+          description: Image sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /send-voice:
+    post:
+      summary: Send a voice message to a Zalo group
+      operationId: sendVoice
+      tags: [Messaging]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendVoiceRequest"
+            examples:
+              voice:
+                summary: Voice message
+                value:
+                  account: "Duy Phong"
+                  url: "https://example.com/audio.ogg"
+      responses:
+        "200":
+          description: Voice sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /schedule:
+    get:
+      summary: List all scheduled jobs
+      operationId: listSchedules
+      tags: [Scheduler]
+      responses:
+        "200":
+          description: Job list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchedulesResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      summary: Create a scheduled job
+      operationId: createSchedule
+      tags: [Scheduler]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateScheduleRequest"
+            examples:
+              hourly:
+                summary: Every hour
+                value:
+                  account: "Duy Phong"
+                  group: "Công ty"
+                  message: "Nhắc: kiểm tra hệ thống"
+                  schedule: "mỗi 1 giờ"
+              daily:
+                summary: Daily at 9am
+                value:
+                  account: "Duy Phong"
+                  message: "Chào buổi sáng!"
+                  schedule: "hàng ngày 9h"
+      responses:
+        "200":
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleCreatedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /schedule/remove:
+    post:
+      summary: Remove a scheduled job
+      operationId: removeSchedule
+      tags: [Scheduler]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveScheduleRequest"
+      responses:
+        "200":
+          description: Job removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RemoveResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "Set HERMES_ZALO_API_KEY in .env"
+    apiKeyQuery:
+      type: apiKey
+      in: query
+      name: api_key
+
+  responses:
+    Unauthorized:
+      description: Invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: hermes-zalo
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: "Account 'Duy Phong' not found"
+
+    Account:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Duy Phong"
+        key:
+          type: string
+          example: "duy phong"
+        zalo_id:
+          type: string
+          example: "19072634041748355"
+        display_name:
+          type: string
+          example: "Nguyễn Văn A"
+        profile:
+          type: string
+          example: "account_duy_phong"
+        registered_at:
+          type: number
+          example: 1700000000
+
+    AccountsResponse:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Account"
+
+    AccountStatus:
+      type: object
+      properties:
+        name:
+          type: string
+        logged_in:
+          type: boolean
+        user_id:
+          type: string
+          nullable: true
+        display_name:
+          type: string
+          nullable: true
+
+    StatusResponse:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountStatus"
+
+    Group:
+      type: object
+      properties:
+        groupId:
+          type: string
+        name:
+          type: string
+        totalMember:
+          type: integer
+        type:
+          type: string
+
+    GroupsResponse:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/Group"
+
+    SendMessageRequest:
+      type: object
+      required: [account, message]
+      properties:
+        account:
+          type: string
+          description: Account friendly name
+          example: "Duy Phong"
+        group:
+          type: string
+          description: Group name (optional, sends to first group if omitted)
+          example: "Công ty"
+        message:
+          type: string
+          description: Message text
+          example: "Báo cáo hôm nay: ..."
+
+    SendImageRequest:
+      type: object
+      required: [account, url]
+      properties:
+        account:
+          type: string
+          example: "Duy Phong"
+        group:
+          type: string
+          example: "Công ty"
+        url:
+          type: string
+          format: uri
+          example: "https://example.com/image.png"
+        caption:
+          type: string
+          example: "Chart"
+
+    SendVoiceRequest:
+      type: object
+      required: [account, url]
+      properties:
+        account:
+          type: string
+          example: "Duy Phong"
+        url:
+          type: string
+          format: uri
+          example: "https://example.com/audio.ogg"
+
+    SendResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        account:
+          type: string
+        group:
+          type: string
+        message_length:
+          type: integer
+
+    CreateScheduleRequest:
+      type: object
+      required: [account, message, schedule]
+      properties:
+        account:
+          type: string
+          example: "Duy Phong"
+        group:
+          type: string
+          description: Optional group name
+          example: "Công ty"
+        message:
+          type: string
+          example: "Nhắc: kiểm tra hệ thống"
+        schedule:
+          type: string
+          description: |
+            Schedule expression in Vietnamese:
+            - "mỗi 1 giờ" / "mỗi 30 phút" / "mỗi 1 ngày"
+            - "hàng ngày" / "hàng ngày 9h" / "9:00 hàng ngày"
+            - "hàng tuần thứ 2"
+          example: "mỗi 1 giờ"
+
+    ScheduleJob:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "a1b2c3d4"
+        account_name:
+          type: string
+        group_name:
+          type: string
+          nullable: true
+        message:
+          type: string
+        schedule:
+          type: object
+        active:
+          type: boolean
+        run_count:
+          type: integer
+        last_run:
+          type: string
+          nullable: true
+
+    ScheduleCreatedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        job:
+          $ref: "#/components/schemas/ScheduleJob"
+
+    SchedulesResponse:
+      type: object
+      properties:
+        jobs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleJob"
+
+    RemoveScheduleRequest:
+      type: object
+      required: [job_id]
+      properties:
+        job_id:
+          type: string
+          example: "a1b2c3d4"
+
+    RemoveResponse:
+      type: object
+      properties:
+        success:
+          type: boolean

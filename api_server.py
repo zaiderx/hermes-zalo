@@ -71,6 +71,35 @@ class APIHandler(BaseHTTPRequestHandler):
             self._respond(200, {"status": "ok", "service": "hermes-zalo"})
             return
 
+        # GET /openapi.yaml - OpenAPI spec
+        if path == "/openapi.yaml" or path == "/openapi.json":
+            spec_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "openapi.yaml")
+            try:
+                with open(spec_path, "r", encoding="utf-8") as f:
+                    spec = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/yaml; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(spec.encode("utf-8"))
+            except FileNotFoundError:
+                self._respond(404, {"error": "openapi.yaml not found"})
+            return
+
+        # GET /docs - Swagger UI redirect
+        if path == "/docs" or path == "/swagger":
+            html = """<!DOCTYPE html>
+<html><head><title>Hermes-Zalo API Docs</title>
+<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+</head><body><div id="swagger-ui"></div>
+<script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script>SwaggerUIBundle({url: '/openapi.yaml', dom_id: '#swagger-ui'})</script>
+</body></html>"""
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(html.encode("utf-8"))
+            return
+
         # GET /accounts
         if path == "/accounts":
             accs = accounts.list_accounts()
