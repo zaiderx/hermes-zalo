@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import base64
 import time
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, List, Tuple
 
 import config
 
