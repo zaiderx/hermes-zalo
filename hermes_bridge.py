@@ -7,7 +7,7 @@ import urllib.error
 
 import config
 
-logger = logging.getLogger("beargate.hermes")
+logger = logging.getLogger("hermes-zalo.hermes")
 
 
 def call_hermes(prompt: str, sender_name: str = None, thread_id: str = None) -> str:

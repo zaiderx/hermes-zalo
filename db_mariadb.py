@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any, List, Tuple
 
 import config
 
-logger = logging.getLogger("beargate.db_mariadb")
+logger = logging.getLogger("hermes-zalo.db_mariadb")
 
 _pool = None
 
@@ -29,7 +29,7 @@ def _get_pool():
             password=config.MARIADB_PASSWORD,
             database=config.MARIADB_DATABASE,
             autocommit=False,
-            pool_name="beargate_pool",
+            pool_name="hermes-zalo_pool",
             pool_size=5,
         )
         logger.info(f"[MARIADB] Kết nối thành công tới {config.MARIADB_DATABASE}")

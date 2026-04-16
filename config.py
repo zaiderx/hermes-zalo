@@ -13,14 +13,14 @@ HERMES_API_KEY = os.getenv("HERMES_API_KEY", "")
 HERMES_TIMEOUT = int(os.getenv("HERMES_TIMEOUT", "60"))
 
 # ─── SQLite (local cache) ─────────────────────────────────────────────────────
-SQLITE_PATH = os.getenv("SQLITE_PATH", os.path.expanduser("~/.beargate/beargate.db"))
+SQLITE_PATH = os.getenv("SQLITE_PATH", os.path.expanduser("~/.hermes-zalo/hermes-zalo.db"))
 
 # ─── MariaDB ──────────────────────────────────────────────────────────────────
 MARIADB_HOST = os.getenv("MARIADB_HOST", "localhost")
 MARIADB_PORT = int(os.getenv("MARIADB_PORT", "3306"))
-MARIADB_USER = os.getenv("MARIADB_USER", "beargate")
+MARIADB_USER = os.getenv("MARIADB_USER", "hermes-zalo")
 MARIADB_PASSWORD = os.getenv("MARIADB_PASSWORD", "")
-MARIADB_DATABASE = os.getenv("MARIADB_DATABASE", "beargate")
+MARIADB_DATABASE = os.getenv("MARIADB_DATABASE", "hermes-zalo")
 
 # ─── Auto-Sync ────────────────────────────────────────────────────────────────
 SYNC_INTERVAL_MINUTES = int(os.getenv("SYNC_INTERVAL_MINUTES", "15"))

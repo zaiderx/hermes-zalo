@@ -1,9 +1,9 @@
 #!/bin/bash
-# BearGate setup script - deploy to /opt/beargate
+# BearGate setup script - deploy to /opt/hermes-zalo
 set -e
 
-INSTALL_DIR="/opt/beargate"
-SERVICE_NAME="beargate"
+INSTALL_DIR="/opt/hermes-zalo"
+SERVICE_NAME="hermes-zalo"
 
 echo "🐾 BearGate Setup - Zalo <-> Hermes Gateway"
 echo "============================================"
@@ -38,7 +38,7 @@ fi
 
 # Setup systemd
 echo "[6/6] Cài đặt systemd service..."
-cp beargate.service /etc/systemd/system/
+cp hermes-zalo.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable "$SERVICE_NAME"
 

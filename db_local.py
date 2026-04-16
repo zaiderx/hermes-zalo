@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any, List
 
 import config
 
-logger = logging.getLogger("beargate.db_local")
+logger = logging.getLogger("hermes-zalo.db_local")
 
 _conn: Optional[sqlite3.Connection] = None
 

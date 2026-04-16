@@ -14,7 +14,7 @@ import db_mariadb
 import hermes_bridge
 import sync
 
-logger = logging.getLogger("beargate.listener")
+logger = logging.getLogger("hermes-zalo.listener")
 
 _process: subprocess.Popen | None = None
 _stop_event = threading.Event()

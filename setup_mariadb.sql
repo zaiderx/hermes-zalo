@@ -1,15 +1,15 @@
 -- BearGate MariaDB setup
 -- Run: mysql -u root -p < setup_mariadb.sql
 
-CREATE DATABASE IF NOT EXISTS beargate
+CREATE DATABASE IF NOT EXISTS hermes-zalo
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
-CREATE USER IF NOT EXISTS 'beargate'@'localhost' IDENTIFIED BY 'CHANGE_ME_PASSWORD';
-GRANT ALL PRIVILEGES ON beargate.* TO 'beargate'@'localhost';
+CREATE USER IF NOT EXISTS 'hermes-zalo'@'localhost' IDENTIFIED BY 'CHANGE_ME_PASSWORD';
+GRANT ALL PRIVILEGES ON hermes-zalo.* TO 'hermes-zalo'@'localhost';
 FLUSH PRIVILEGES;
 
-USE beargate;
+USE hermes-zalo;
 
 CREATE TABLE IF NOT EXISTS chat_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

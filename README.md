@@ -30,8 +30,8 @@ chmod +x setup.sh
 sudo ./setup.sh
 
 # 4. Start
-sudo systemctl start beargate
-journalctl -u beargate -f
+sudo systemctl start hermes-zalo
+journalctl -u hermes-zalo -f
 ```
 
 ## Requirements
@@ -51,13 +51,13 @@ All config via `.env` file:
 | `OWN_ID` | (auto) | Own Zalo ID for filtering |
 | `HERMES_API_URL` | http://localhost:5000/chat | Hermes API endpoint |
 | `MARIADB_HOST` | localhost | MariaDB host |
-| `MARIADB_DATABASE` | beargate | Database name |
+| `MARIADB_DATABASE` | hermes-zalo | Database name |
 | `SYNC_INTERVAL_MINUTES` | 15 | SQLite→MariaDB sync interval |
 
 ## Project Structure
 
 ```
-beargate/
+hermes-zalo/
 ├── main.py              # Entry point
 ├── config.py            # Configuration from env
 ├── listener.py          # openzca listen wrapper
@@ -65,7 +65,7 @@ beargate/
 ├── db_local.py          # SQLite local cache
 ├── db_mariadb.py        # MariaDB persistent storage
 ├── sync.py              # Auto-sync SQLite → MariaDB
-├── beargate.service     # Systemd service
+├── hermes-zalo.service     # Systemd service
 ├── setup.sh             # Deploy script
 ├── setup_mariadb.sql    # MariaDB setup SQL
 ├── .env.example         # Environment template

@@ -8,7 +8,7 @@ import config
 import db_local
 import db_mariadb
 
-logger = logging.getLogger("beargate.sync")
+logger = logging.getLogger("hermes-zalo.sync")
 
 _sync_thread: threading.Thread | None = None
 _stop_event = threading.Event()
